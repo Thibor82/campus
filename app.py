@@ -1,18 +1,32 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import psycopg2
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+import os
+from functools import wraps
 
-
+# Cargar variables de entorno desde archivo .env
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+
+# Decorador para proteger rutas que requieren autenticación
+def login_requerido(f):
+    @wraps(f)
+    def decorado(*args, **kwargs):
+        if "usuario" not in session:
+            return redirect(url_for("hello_world"))
+        return f(*args, **kwargs)
+    return decorado
 
 def conectarCampus():
     conexion = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="campus",
-        user="postgres",
-        password="admin"
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
     )
     return conexion
 
@@ -38,7 +52,10 @@ def hello_world():
                 stored_hash, email = resultado[0], resultado[1]
                 # Verificar el password con el hash almacenado
                 if check_password_hash(stored_hash, password):
-                    return render_template("user.html", usuario=usuario, email=email)
+                    # Crear sesión activa
+                    session["usuario"] = usuario
+                    session["email"] = email
+                    return redirect(url_for("perfil_usuario"))
                 else:
                     return redirect(url_for("registro"))
             else:
@@ -75,13 +92,29 @@ def registro():
             cursor.close()
             conn.close()
 
-            # Después del registro, mostrar página de usuario
-            return render_template("login.html")
+            # Crear sesión después del registro
+            session["usuario"] = usuario
+            session["email"] = email
+            return redirect(url_for("perfil_usuario"))
         except Exception as e:
             print(f"Error al registrar: {e}")
             return render_template("registro.html", error="Error al registrar el usuario")
     
     return render_template("registro.html")
+
+@app.route("/perfil", methods=["GET"])
+@login_requerido
+def perfil_usuario():
+    """Página de perfil de usuario protegida"""
+    usuario = session.get("usuario")
+    email = session.get("email")
+    return render_template("user.html", usuario=usuario, email=email)
+
+@app.route("/logout", methods=["GET"])
+def logout():
+    """Cerrar sesión del usuario"""
+    session.clear()
+    return redirect(url_for("hello_world"))
 
 # @app.route("/login", methods=["GET", "POST"])
 # def login():
