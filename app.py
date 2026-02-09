@@ -14,7 +14,7 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 # Decorador para proteger rutas que requieren autenticación
 def login_requerido(f):
     @wraps(f)
-    def decorado(*args, **kwargs):
+    def decorado(*args, **kwargs):  
         if "usuario" not in session:
             return redirect(url_for("hello_world"))
         return f(*args, **kwargs)
