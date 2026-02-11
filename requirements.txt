@@ -1,0 +1,11 @@
+# Dependencias principales para esta aplicación Flask
+Flask>=2.0,<3.0
+psycopg2-binary>=2.9
+python-dotenv>=1.0
+Werkzeug>=2.0,<3.0
+
+# Dependencia para despliegue en Railway (Linux)
+gunicorn>=20.0.4
+
+# Opcionales para despliegue (descomentarlas si las usas)
+# waitress>=2.1.0   # Windows deployment
