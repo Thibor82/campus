@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <p>Hola Administrador, inicia sesión para continuar.<br>
+    
+    <form method="POST" action="/app-admin">
+
+        <label>Usuario:</label>
+        <input type="text" name="user" required><br><br>
+
+        <label>Password:</label>
+        <input type="password" name="password" required><br><br>
+
+        <label>Email:</label>
+        <input type="email" name="email" required><br><br>
+
+        <button type="submit">Login Administrador</button>
+    
+    </form>
+    
+
+{% endblock%}

@@ -4,7 +4,7 @@ env/
 ENV/
 .venv/
 .env
-
+env
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -70,3 +70,6 @@ yarn-error.log*
 
 # Archivos de Flask
 flask_session/
+
+#Esquema BD
+InfoDataBase/Schema.sql
