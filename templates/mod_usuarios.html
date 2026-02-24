@@ -1,0 +1,40 @@
+{% extends "base_admin.html" %}
+
+{% block content %}
+
+    <h2>Página de Registro</h2>
+    
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    
+    <form method="POST" action="/mod_usuarios">
+
+        <label>Usuario:</label>
+        <input type="text" name="user" ><br><br>
+
+        <label>Email:</label>
+        <input type="email" name="email" ><br><br>
+
+        <label>Fecha de alta:</label>        
+        <input type="date" name="date" ><br><br>
+
+        <button type="submit">Buscar</button>
+    
+    </form>
+
+    <div>
+        <ul id="usuario_lista">
+            {% if usuarios %}
+                {% for u in usuarios %}
+                    <li><strong>{{ u.usuario }}</strong> — {{ u.email }} — {{ u.creado_en }}</li>
+                {% endfor %}
+            {% else %}
+                <li>No se encontraron usuarios</li>
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+{% endblock %}

@@ -34,7 +34,7 @@ def hello_world():
     if request.method == "POST":
         usuario = request.form["user"]
         password = request.form["password"]
-        print(password)
+        
         
 
         
@@ -56,17 +56,17 @@ def hello_world():
                     session["email"] = email
                     return redirect(url_for("perfil_usuario"))
                 else:
-                    return redirect(url_for("registro"))
+                    return redirect(url_for("f_registro"))
             else:
-                return redirect(url_for("registro"))
+                return redirect(url_for("f_registro"))
         except Exception as e:
             print(f"Error: {e}")
-            return redirect(url_for("registro"))
+            return redirect(url_for("f_registro"))
     
     return render_template("login.html")
 
 @app.route("/registro", methods=["GET", "POST"])
-def registro():
+def f_registro():
     if request.method == "POST":
         usuario = request.form["user"]
         password = request.form["password"]
@@ -161,3 +161,34 @@ def login_admin():
     
     return render_template("admin.html")
 
+
+@app.route("/mod_usuarios", methods=["GET", "POST"])
+def mod_usuarios():
+    if request.method == "POST":       
+        usuario = request.form["user"]
+        email = request.form["email"]
+        creado_en = request.form["date"]
+
+        try:
+            conn = conectarCampus()
+            cursor = conn.cursor()
+            # Obtener el password y email para el usuario admin
+            cursor.execute("SELECT usuario, usuario_email, creado_en FROM usuarios WHERE usuario = %s OR usuario_email = %s OR creado_en = %s", (usuario, email, creado_en))
+            resultados = cursor.fetchall()
+            cursor.close()
+            conn.close()
+
+            usuarios = []
+            for r in resultados:
+                usuarios.append({
+                    "usuario": r[0],
+                    "email": r[1],
+                    "creado_en": r[2]
+                })
+
+            return render_template("mod_usuarios.html", usuarios=usuarios)
+        except Exception as e:
+            print(f"Error: {e}")
+            return render_template("mod_usuarios.html", error=f"Error en el servidor: {e}")
+        
+    return render_template("mod_usuarios.html")

@@ -1,9 +1,19 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 
 {% block content %}
 
-    <p>Usuario {{ usuario }} ha iniciado sesión correctamente.<br>
-    <p>Tu correo es: {{ email }}</p><br>
+    <p>Admin {{ usuario }} ha iniciado sesión correctamente.<br>
+    
+    <ul>
+        <li><button type="button" onclick="location.href='{{ url_for('mod_usuarios') }}'">Modificar Usuarios</button></li>
+        <li><button>Modificar Asignaturas</button></li>
+        <li><button>Modificar Horarios</button></li>
+        <li><button></button></li>
+        <li><button></button></li>
+        <li><button></button></li>
+
+    </ul>
+    
     
     <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
 
