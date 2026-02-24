@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <p>Usuario {{ usuario }} ha iniciado sesión correctamente.<br>
+    <p>Tu correo es: {{ email }}</p><br>
+    
+    <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
+
+{% endblock%}
