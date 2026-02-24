@@ -152,36 +152,3 @@ def perfil_admin():
             return render_template("login.html", error=f"Error en el servidor: {e}")
     
     return render_template("admin.html")
-
-#def perfil_admin():
-#    return render_template("admin.html")
-
-# @app.route("/login", methods=["GET", "POST"])
-# def login():
-#     # Ruta alternativa para login (puede usarse además de /)
-#     if request.method == "POST":
-#         usuario = request.form["user"]
-#         password = request.form["password"]
-        
-#         try:
-#             conn = conectarCampus()
-#             cursor = conn.cursor()
-#             cursor.execute("SELECT password, usuario_email FROM usuarios WHERE usuario = %s", (usuario,))
-#             resultado = cursor.fetchone()
-#             cursor.close()
-#             conn.close()
-
-#             if resultado:
-#                 stored_hash, email = resultado[0], resultado[1]
-#                 if check_password_hash(stored_hash, password):
-#                     return render_template("user.html", usuario=usuario, email=email)
-#                 else:
-#                     return redirect(url_for("registro"))
-#             else:
-#                 return redirect(url_for("registro"))
-#         except Exception as e:
-#             print(f"Error: {e}")
-#             return redirect(url_for("registro"))
-    
-#     return render_template("login.html")
-
