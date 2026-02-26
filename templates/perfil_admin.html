@@ -5,7 +5,7 @@
     <p>Admin {{ usuario }} ha iniciado sesión correctamente.<br>
     
     <ul>
-        <li><button type="button" onclick="location.href='{{ url_for('mod_usuarios') }}'">Modificar Usuarios</button></li>
+        <li><button type="button" onclick="location.href='{{ url_for('admin_bp.mod_usuarios') }}'">Modificar Usuarios</button></li>
         <li><button>Modificar Asignaturas</button></li>
         <li><button>Modificar Horarios</button></li>
         <li><button></button></li>
@@ -15,6 +15,6 @@
     </ul>
     
     
-    <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar sesión</a>
+    <a href="{{ url_for('admin_bp.logout') }}" class="btn btn-danger">Cerrar sesión</a>
 
 {% endblock%}
