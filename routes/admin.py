@@ -83,3 +83,38 @@ def logout():
     session.clear()
     # volver a pantalla de login administrador
     return redirect(url_for("admin_bp.login_admin"))
+@admin_bp.route("/mod_usuarios/<usuario>", methods=["GET", "POST"])
+@login_requerido
+def modificar_usuario(usuario):
+    if request.method == "POST":
+        nuevo_usuario = request.form.get("user")
+        nuevo_email = request.form.get("email")
+        try:
+            conn = conectarCampus()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE usuarios SET usuario = %s, usuario_email = %s WHERE usuario = %s", (nuevo_usuario, nuevo_email, usuario))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return redirect(url_for("admin_bp.mod_usuarios"))
+        except Exception as e:
+            print(f"Error al actualizar usuario: {e}")
+            return render_template("mod_usuarios.html", error=f"Error al actualizar: {e}")
+
+    # GET: obtener datos del usuario y mostrar formulario en la misma plantilla
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        cursor.execute("SELECT usuario, usuario_email, creado_en FROM usuarios WHERE usuario = %s", (usuario,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if row:
+            usuario_data = {"usuario": row[0], "email": row[1], "creado_en": row[2]}
+            return render_template("mod_usuarios.html", usuario_a_modificar=usuario_data)
+        else:
+            return render_template("mod_usuarios.html", error="Usuario no encontrado")
+    except Exception as e:
+        print(f"Error: {e}")
+        return render_template("mod_usuarios.html", error=f"Error en el servidor: {e}")

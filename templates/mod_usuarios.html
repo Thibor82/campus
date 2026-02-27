@@ -27,7 +27,7 @@
         <ul id="usuario_lista">
             {% if usuarios %}
                 {% for u in usuarios %}
-                    <li><strong>{{ u.usuario }}</strong> — {{ u.email }} — {{ u.creado_en }}</li>
+                    <li id="{{ u.usuario }}"><strong>{{ u.usuario }}</strong> — {{ u.email }} — {{ u.creado_en }} <button type="button" onclick="location.href='{{ request.path }}/{{ u.usuario }}'">Modificar Usuario</button></li>
                 {% endfor %}
             {% else %}
                 <li>No se encontraron usuarios</li>
@@ -36,5 +36,19 @@
         </ul>
 
     </div>
+
+    {% if usuario_a_modificar %}
+        <hr>
+        <h3>Modificar usuario: {{ usuario_a_modificar.usuario }}</h3>
+        <form method="POST" action="{{ request.path }}">
+            <label>Usuario:</label>
+            <input type="text" name="user" value="{{ usuario_a_modificar.usuario }}" required><br><br>
+
+            <label>Email:</label>
+            <input type="email" name="email" value="{{ usuario_a_modificar.email }}" required><br><br>
+
+            <button type="submit">Guardar cambios</button>
+        </form>
+    {% endif %}
 
 {% endblock %}
