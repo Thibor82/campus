@@ -17,7 +17,7 @@ CREATE TABLE usuarios (
 -- tabla para almacenar eventos/calendario de cada alumno
 CREATE TABLE eventos (
     id_evento SERIAL PRIMARY KEY,
-    id_usuario INTEGER NOT NULL REFERENCES usuarios(id_usuarios) ON DELETE CASCADE,
+    id_usuarios INTEGER NOT NULL REFERENCES usuarios(id_usuarios) ON DELETE CASCADE,
     fecha DATE NOT NULL,
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT,
@@ -59,7 +59,7 @@ CREATE TABLE eventos_asignatura (
 CREATE OR REPLACE FUNCTION crear_evento_bienvenida()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO eventos (id_usuarios, fecha, titulo, descripcion, creado_en)
+    INSERT INTO eventos (id_usuario, fecha, titulo, descripcion, creado_en)
     VALUES (
         NEW.id_usuarios,
         CURRENT_DATE,
