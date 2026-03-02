@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Mis Asignaturas</h2>
+    
+    <div class="mb-4">
+        <a href="{{ url_for('alumno_bp.listar_asignaturas') }}" class="btn btn-secondary">Explorar Más Asignaturas</a>
+    </div>
+
+    {% if asignaturas %}
+        <div class="row">
+            {% for id_asign, nombre, descripcion, profesor in asignaturas %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ nombre }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted"><strong>Profesor:</strong> {{ profesor }}</small>
+                        </p>
+                        <p class="card-text">{{ descripcion }}</p>
+                        <a href="{{ url_for('alumno_bp.detalle_asignatura', id_asignatura=id_asign) }}" class="btn btn-sm btn-primary">Ver Detalle</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            No estás matriculado en ninguna asignatura. 
+            <a href="{{ url_for('alumno_bp.listar_asignaturas') }}">Explora asignaturas disponibles</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

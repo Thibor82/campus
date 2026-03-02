@@ -117,7 +117,7 @@ def calendario():
             conn = conectarCampus()
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT fecha, titulo FROM eventos WHERE id_usuarios = %s AND date_part('year', fecha) = %s AND date_part('month', fecha) = %s",
+                "SELECT fecha, titulo FROM eventos WHERE id_usuario = %s AND date_part('year', fecha) = %s AND date_part('month', fecha) = %s",
                 (user_id, year, month),
             )
             for fecha, titulo in cursor.fetchall():
@@ -166,7 +166,7 @@ def dia_detalle():
             conn = conectarCampus()
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT titulo, descripcion FROM eventos WHERE id_usuarios = %s AND fecha = %s",
+                "SELECT titulo, descripcion FROM eventos WHERE id_usuario = %s AND fecha = %s",
                 (user_id, fecha),
             )
             for titulo, descripcion in cursor.fetchall():
@@ -201,7 +201,7 @@ def crear_evento():
             conn = conectarCampus()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO eventos (id_usuarios, fecha, titulo, descripcion) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO eventos (id_usuario, fecha, titulo, descripcion) VALUES (%s, %s, %s, %s)",
                 (user_id, fecha, titulo, descripcion),
             )
             conn.commit()
@@ -210,6 +210,173 @@ def crear_evento():
         except Exception as e:
             print(f"Error creando evento: {e}")
     return redirect(url_for("alumno_bp.calendario", year=fecha.year, month=fecha.month))
+
+
+
+
+# ---------- asignaturas ----------
+
+@alumno_bp.route("/asignaturas", methods=["GET"])
+@login_requerido
+def listar_asignaturas():
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        
+        # Obtener todas las asignaturas con info del profesor
+        cursor.execute("""
+            SELECT a.id_asignatura, a.nombre, a.descripcion, u.usuario
+            FROM asignaturas a
+            JOIN usuarios u ON a.id_profesor = u.id_usuarios
+            ORDER BY a.nombre
+        """)
+        asignaturas = cursor.fetchall()
+        
+        # Obtener asignaturas donde está matriculado
+        cursor.execute("""
+            SELECT id_asignatura FROM matriculaciones WHERE id_usuario = %s
+        """, (user_id,))
+        matriculado = {row[0] for row in cursor.fetchall()}
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template("asignaturas.html", 
+                             asignaturas=asignaturas,
+                             matriculado=matriculado,
+                             usuario=usuario)
+    except Exception as e:
+        print(f"Error cargando asignaturas: {e}")
+        return render_template("asignaturas.html", asignaturas=[], matriculado=set())
+
+
+@alumno_bp.route("/mis-asignaturas", methods=["GET"])
+@login_requerido
+def mis_asignaturas():
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT a.id_asignatura, a.nombre, a.descripcion, u.usuario
+            FROM asignaturas a
+            JOIN matriculaciones m ON a.id_asignatura = m.id_asignatura
+            JOIN usuarios u ON a.id_profesor = u.id_usuarios
+            WHERE m.id_usuario = %s
+            ORDER BY a.nombre
+        """, (user_id,))
+        asignaturas = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template("mis_asignaturas.html", 
+                             asignaturas=asignaturas,
+                             usuario=usuario)
+    except Exception as e:
+        print(f"Error cargando mis asignaturas: {e}")
+        return render_template("mis_asignaturas.html", asignaturas=[])
+
+
+@alumno_bp.route("/asignatura/<int:id_asignatura>", methods=["GET"])
+@login_requerido
+def detalle_asignatura(id_asignatura):
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        
+        # Obtener info de asignatura
+        cursor.execute("""
+            SELECT a.id_asignatura, a.nombre, a.descripcion, u.usuario, u.id_usuarios
+            FROM asignaturas a
+            JOIN usuarios u ON a.id_profesor = u.id_usuarios
+            WHERE a.id_asignatura = %s
+        """, (id_asignatura,))
+        asignatura = cursor.fetchone()
+        
+        if not asignatura:
+            return redirect(url_for("alumno_bp.listar_asignaturas"))
+        
+        # Verificar si está matriculado
+        cursor.execute("""
+            SELECT 1 FROM matriculaciones 
+            WHERE id_usuario = %s AND id_asignatura = %s
+        """, (user_id, id_asignatura))
+        matriculado = cursor.fetchone() is not None
+        
+        # Obtener eventos de la asignatura
+        cursor.execute("""
+            SELECT fecha, titulo, descripcion
+            FROM eventos_asignatura
+            WHERE id_asignatura = %s
+            ORDER BY fecha DESC
+        """, (id_asignatura,))
+        eventos = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template("detalle_asignatura.html",
+                             asignatura=asignatura,
+                             matriculado=matriculado,
+                             eventos=eventos,
+                             usuario=usuario)
+    except Exception as e:
+        print(f"Error cargando detalle asignatura: {e}")
+        return redirect(url_for("alumno_bp.listar_asignaturas"))
+
+
+@alumno_bp.route("/asignatura/<int:id_asignatura>/inscribirse", methods=["POST"])
+@login_requerido
+def inscribirse_asignatura(id_asignatura):
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO matriculaciones (id_usuario, id_asignatura)
+            VALUES (%s, %s)
+        """, (user_id, id_asignatura))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error inscribiendo: {e}")
+    
+    return redirect(url_for("alumno_bp.detalle_asignatura", id_asignatura=id_asignatura))
+
+
+@alumno_bp.route("/asignatura/<int:id_asignatura>/darse-baja", methods=["POST"])
+@login_requerido
+def baja_asignatura(id_asignatura):
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        cursor.execute("""
+            DELETE FROM matriculaciones
+            WHERE id_usuario = %s AND id_asignatura = %s
+        """, (user_id, id_asignatura))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error dando de baja: {e}")
+    
+    return redirect(url_for("alumno_bp.listar_asignaturas"))
 
 
 @alumno_bp.route("/logout", methods=["GET"])

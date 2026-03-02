@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Dashboard Profesor</h2>
+    <p>Bienvenido, <strong>{{ usuario }}</strong></p>
+
+    <div class="row mt-5">
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Mis Asignaturas</h5>
+                    <h1 class="display-4">{{ num_asignaturas }}</h1>
+                    <a href="{{ url_for('profesor_bp.mis_asignaturas') }}" class="btn btn-primary mt-3">Gestionar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Alumnos Totales</h5>
+                    <h1 class="display-4">{{ num_alumnos }}</h1>
+                    <a href="{{ url_for('profesor_bp.mis_asignaturas') }}" class="btn btn-primary mt-3">Ver Detalles</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-5">
+        <div class="card-body">
+            <h5 class="card-title">Acciones Rápidas</h5>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="{{ url_for('profesor_bp.mis_asignaturas') }}">Ver mis asignaturas</a>
+                </li>
+                <li class="list-group-item">
+                    <a href="{{ url_for('alumno_bp.logout') }}">Cerrar sesión</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

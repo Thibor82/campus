@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>{{ asignatura[1] }}</h2>
+            <p class="text-muted"><strong>Profesor:</strong> {{ asignatura[3] }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if matriculado %}
+                <form method="POST" action="{{ url_for('alumno_bp.baja_asignatura', id_asignatura=asignatura[0]) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Deseas darte de baja?')">Darte de Baja</button>
+                </form>
+            {% else %}
+                <form method="POST" action="{{ url_for('alumno_bp.inscribirse_asignatura', id_asignatura=asignatura[0]) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-success">Inscribirse</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Descripción</h5>
+            <p>{{ asignatura[2] }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h5 class="card-title">Eventos</h5>
+        </div>
+        <div class="card-body">
+            {% if eventos %}
+                <ul class="list-group list-group-flush">
+                    {% for fecha, titulo, descripcion in eventos %}
+                    <li class="list-group-item">
+                        <strong>{{ fecha }}</strong> - {{ titulo }}
+                        {% if descripcion %}
+                            <p class="mb-0 text-muted">{{ descripcion }}</p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No hay eventos para esta asignatura.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('alumno_bp.listar_asignaturas') }}" class="btn btn-secondary mt-4">Volver</a>
+</div>
+{% endblock %}
