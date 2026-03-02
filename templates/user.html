@@ -5,6 +5,7 @@
     <p>Usuario {{ usuario }} ha iniciado sesión correctamente.<br>
     <p>Tu correo es: {{ email }}</p><br>
     
+    <a href="{{ url_for('alumno_bp.calendario') }}" class="btn btn-primary">Ver mi calendario</a>
     <a href="{{ url_for('alumno_bp.logout') }}" class="btn btn-danger">Cerrar sesión</a>
 
 {% endblock%}

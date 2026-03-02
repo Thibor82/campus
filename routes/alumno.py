@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from helpers import conectarCampus, login_requerido
+import calendar as _calendar
+from datetime import date, datetime
 
 alumno_bp = Blueprint("alumno_bp", __name__)
 
@@ -78,6 +80,136 @@ def perfil_usuario():
     usuario = session.get("usuario")
     email = session.get("email")
     return render_template("user.html", usuario=usuario, email=email)
+
+
+# ---------- calendario personal ----------
+
+def _get_user_id(usuario):
+    try:
+        conn = conectarCampus()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id_usuarios FROM usuarios WHERE usuario = %s", (usuario,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return row[0] if row else None
+    except Exception as e:
+        print(f"Error obteniendo id_usuarios: {e}")
+        return None
+
+
+@alumno_bp.route("/perfil/calendario")
+@login_requerido
+def calendario():
+    usuario = session.get("usuario")
+    year = request.args.get("year", type=int) or date.today().year
+    month = request.args.get("month", type=int) or date.today().month
+
+    # compute calendar weeks
+    cal = _calendar.Calendar(firstweekday=6)  # week starts domingo
+    weeks = cal.monthdayscalendar(year, month)
+
+    # fetch events for the month to mark days with events
+    events_by_day = {}
+    user_id = _get_user_id(usuario)
+    if user_id:
+        try:
+            conn = conectarCampus()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT fecha, titulo FROM eventos WHERE id_usuarios = %s AND date_part('year', fecha) = %s AND date_part('month', fecha) = %s",
+                (user_id, year, month),
+            )
+            for fecha, titulo in cursor.fetchall():
+                day = fecha.day
+                events_by_day.setdefault(day, []).append(titulo)
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Error cargando eventos: {e}")
+
+    # calcula mes anterior y siguiente para los controles
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+
+    return render_template(
+        "calendario.html",
+        usuario=usuario,
+        year=year,
+        month=month,
+        weeks=weeks,
+        events_by_day=events_by_day,
+        prev_month=prev_month,
+        prev_year=prev_year,
+        next_month=next_month,
+        next_year=next_year,
+    )
+
+
+@alumno_bp.route("/perfil/calendario/dia")
+@login_requerido
+def dia_detalle():
+    date_str = request.args.get("date")
+    try:
+        fecha = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except Exception:
+        return jsonify({"error": "fecha inválida"}), 400
+
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    eventos = []
+
+    if user_id:
+        try:
+            conn = conectarCampus()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT titulo, descripcion FROM eventos WHERE id_usuarios = %s AND fecha = %s",
+                (user_id, fecha),
+            )
+            for titulo, descripcion in cursor.fetchall():
+                eventos.append({"titulo": titulo, "descripcion": descripcion})
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Error consultando eventos día: {e}")
+            return jsonify({"error": "falló consulta"}), 500
+
+    return jsonify({"date": fecha.isoformat(), "eventos": eventos})
+
+
+@alumno_bp.route("/perfil/calendario/evento", methods=["POST"])
+@login_requerido
+def crear_evento():
+    # recibe fecha, titulo, descripcion desde formulario
+    fecha_str = request.form.get("fecha")
+    titulo = request.form.get("titulo")
+    descripcion = request.form.get("descripcion")
+    if not fecha_str or not titulo:
+        return redirect(url_for("alumno_bp.calendario"))
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    except Exception:
+        return redirect(url_for("alumno_bp.calendario"))
+
+    usuario = session.get("usuario")
+    user_id = _get_user_id(usuario)
+    if user_id:
+        try:
+            conn = conectarCampus()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO eventos (id_usuarios, fecha, titulo, descripcion) VALUES (%s, %s, %s, %s)",
+                (user_id, fecha, titulo, descripcion),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Error creando evento: {e}")
+    return redirect(url_for("alumno_bp.calendario", year=fecha.year, month=fecha.month))
 
 
 @alumno_bp.route("/logout", methods=["GET"])
